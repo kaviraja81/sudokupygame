@@ -1,10 +1,10 @@
 # Sudoku Game
 
-## Purpose
+## 1.Purpose
 This program is a game to write a Sudoku Game using Pygame in Python. The purpose of htis program is to practice Python and Pygame 
 
 
-## Functionalities 
+## 2.Functionalities 
 The program ruleschk.py has 4 functions and is used to check if the numbers that are input in the screen is valid input or not
 
 The program Sudokugame.py is the main program that creates the Sudoku Board. The numbers 1 to 9 are considered as input for solving the numbers. When enter is pressed, 
@@ -24,4 +24,6 @@ When any of hte numbers from 1 to 9 are clicked, the number is written to the sc
 When enter is pressed on the number written, then it is validated to verify whether the number is right or wrong by calling ruleschk module. If the number is valid, the number is 
 written to he screen in the normal font size in black colour. If the number is not correct, an X mark is written in red colour
 
+## 3. Improvements
 
+  There can be many other functionalities added.This code works on only 1 board as input. We can add functionalities to take different boards as input like easy,medium and hard. The time to solve the puzzle can also be displayed. 
