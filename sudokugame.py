@@ -13,7 +13,6 @@ class Sudoku_board:
         self.row=0
         self.col=0
         self.strike=0
-       
         self.tempboard=copy.deepcopy(board)
         self.updatedboard=copy.deepcopy(board)
     
