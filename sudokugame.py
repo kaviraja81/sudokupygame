@@ -1,5 +1,6 @@
 import pygame
 import copy
+import ruleschk
 
 class Sudoku_board:
     def __init__(self,x,y,width,height,vel,board):
@@ -9,11 +10,16 @@ class Sudoku_board:
         self.height=height
         self.vel=vel
         self.board=board
-        self.selectval=[]
+        self.row=0
+        self.col=0
         font = pygame.font.Font('freesansbold.ttf', 30)
+        self.tempboard=copy.deepcopy(board)
         self.updatedboard=copy.deepcopy(board)
     
+    '''### This function is used to draw rectangles for the Sudoku Board
+    '''
     def draw_rect(self,win):
+        win.fill((255,255,255))
         for j in range(9):
             for i in range(9): 
                 
@@ -25,7 +31,10 @@ class Sudoku_board:
                 self.x+=self.width
             self.x=25
             self.y+=self.height
-    
+    '''
+    ## This function is used to draw grid lines on the board. The logic is included to have thick lines on the box and 
+    # thinner lines on the other boxes 
+    '''
     def draw_lines(self,win):
             # Vertical lines for the Sudoku Grid
         self.x=25
@@ -36,7 +45,7 @@ class Sudoku_board:
             else :
                 thick = 1
             
-            pygame.draw.line(win,(255,0,0),(self.x,self.y-2),(self.x,self.y+(9*self.height)),thick)  #  vertical line 
+            pygame.draw.line(win,(0,0,0),(self.x,self.y-2),(self.x,self.y+(9*self.height)),thick)  #  vertical line 
             self.x+=self.width
                 
         self.x=25
@@ -48,9 +57,11 @@ class Sudoku_board:
                 thick=4
             else :
                 thick=1
-            pygame.draw.line(win,(255,0,0),(self.x,self.y-2),(self.x +(9*self.width),self.y-2),thick)       # horizontal line 
+            pygame.draw.line(win,(0,0,0),(self.x,self.y-2),(self.x +(9*self.width),self.y-2),thick)       # horizontal line 
             self.y+=self.height
 
+    '''' Find the position of the rectangle box that was clicked in the mouse 
+    '''
     # Get the rectangle for the mouse position clicked.
     def get_rect(self,pos): 
         self.x=25
@@ -59,42 +70,70 @@ class Sudoku_board:
         col=(pos[1]-self.y)//self.height
         return [row,col]
 
-    def write_num(self,win,key):
-        x=25+(self.selectval[0]*self.width)
-        y=25+(self.selectval[1]*self.height)
-        #print(x,y)
-        row=self.selectval[0]
-        col=self.selectval[1]
-        print(row,col)
-        print(self.updatedboard)
-        self.updatedboard[row][col]=key
-        font = pygame.font.Font('freesansbold.ttf', 15)
-        message=font.render(str(key),True,(128,128,128))
-        
-        win.blit(message,(x+5,y+5))   
-        
+    ''' Write numbers on the board  . Initially when the numbers are written as a trial, it is written in grey colour 
+        and the valid variable is set to False. (Else logic)
+        When the number is written adn enter is pressed on the keyboard, if hte number is valid, the function 
+        is called to write it on the board and the colour of the number is black. The updatedboard variable is set to the 
+        number and the tempboard is set back to zero.
+    '''
+    def write_num(self,win,key,valid):
+
+        x=25+(self.row*self.width)
+        y=25+(self.col*self.height)
+        print ("valid" ,valid)
+        if valid : 
+           print ("Key is  ", key)
+           self.updatedboard[self.row][self.col]=key
+           self.tempboard[self.row][self.col]=0
+           font = pygame.font.Font('freesansbold.ttf', 20)
+           message=font.render(str(self.updatedboard[self.row][self.col]),True,(0,0,0))
+           win.blit(message,(x+10,y+10)) 
+        else :    
+           self.tempboard[self.row][self.col]=key
+           font = pygame.font.Font('freesansbold.ttf', 15)
+           message=font.render(str(key),True,(128,128,128))
+           win.blit(message,(x+5,y+5))   
+        print (self.tempboard[self.row][self.col],self.updatedboard[self.row][self.col])
+    
+    '''
+        This function @clearval is used to clear the number on the board, 
+        This function is called in  case of delete or writing a valid number after pressing enter on the keyboard
+    '''
     def clearval(self,win,board):
-        row=self.selectval[0]
-        col=self.selectval[1]
-        print ("inside function", board[row][col])
-        if board[row][col] !=0 :
+        print(board[self.row][self.col])
+        if board[self.row][self.col] !=0 :
            return
-        x=25+(self.selectval[0]*self.width)
-        y=25+(self.selectval[1]*self.height)
-        self.updatedboard[row][col]=0
+        x=25+(self.row*self.width)
+        y=25+(self.col*self.height)
+        self.tempboard[self.row][self.col]=0
+        print("draw a empty rectange")
         pygame.draw.rect(win,(255,255,255),(x+2,y+2,30,20))
 
+    ''' This function is called to set the row and col variable in the object to the clicked mouse position
+    '''
     def board_select(self,clickedcell):
-        row=clickedcell[0]
-        col=clickedcell[1]
-        # print(row,col)
-        # print(self.updatedselectboard)
-        # for i in range(9):
-        #     for j in range(9):
-        #         self.updatedselectboard[i][j] = False
-        # self.updatedselectboard[row][col]=True
-        self.selectval=[row,col]
-        # print(self.selectval)
+        self.row=clickedcell[0]
+        self.col=clickedcell[1]
+ 
+    ''' Validate function is used to call the ruleschk module to check 
+        if the number is not present in the Row using rowchknum function , 
+        if the number is not present in the column using colchknum function
+        if the number is not prsent in the box using boxchknum function. 
+        If the number is not present then the number is a valid numbe Hence this function returns True 
+        else it returns False 
+    '''
+    def validate(self): 
+        # print(ru)
+        if ruleschk.rowchecknum(self.updatedboard,self.row,self.tempboard[self.row][self.col]) and      \
+           ruleschk.colchecknum(self.updatedboard,self.col,self.tempboard[self.row][self.col]) :
+           if ruleschk.boxcheck(self.updatedboard,self.row,self.col,self.tempboard[self.row][self.col]):
+              return True
+           else :
+              return False  
+        else :
+            return False
+
+            
 def main():
     pygame.init()     
     pygame.font.init()
@@ -103,6 +142,8 @@ def main():
     toggle = True
     FPS=60
     clock=pygame.time.Clock()
+   
+    pygame.display.update()
     board = [ [7, 8, 0, 4, 0, 0, 1, 2, 0],
             [6, 0, 0, 0, 7, 5, 0, 0, 9],
             [0, 0, 0, 6, 0, 1, 0, 7, 8],
@@ -131,8 +172,7 @@ def main():
                 clickedcell=s1.get_rect(pos)
                 print(pos,clickedcell)
                 s1.board_select(clickedcell)
-                print(s1.selectval)
- 
+               
             if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 keys=pygame.key.get_pressed()
                 if keys[pygame.K_1] :
@@ -155,16 +195,26 @@ def main():
                     key=9
                 if keys[pygame.K_DELETE]:
                    s1.clearval(win,board)
+                if keys[pygame.K_RETURN]:
+                   print("inside enter",board[s1.row][s1.col])
+                   if board[s1.row][s1.col] == 0 :
+                      valid = False 
+                      valid = s1.validate() 
+                      print("IF cONDITION Valid" ,valid)
+                      if valid:
+                        keyval=s1.tempboard[s1.row][s1.col]
+                        s1.clearval(win,board)
+                        s1.write_num(win,keyval,valid)
+                      else : 
+                          s1.clearval(win,board)
+                          print("Wrong Number")
+                       
 
-        if s1.selectval: 
-            row=s1.selectval[0]
-            col=s1.selectval[1]
-       
-        if key != None and board[row][col] == 0 :          
-            print (key)
-            print(s1.updatedboard[row][col],board[row][col])
-            s1.write_num(win,key)
-            print(s1.updatedboard[row][col],board[row][col])
+        if key != None and s1.updatedboard[s1.row][s1.col] == 0 : 
+           print("When is this condition key not satisfied", key)         
+           s1.clearval(win,board)
+           valid=False
+           s1.write_num(win,key,valid)
         pygame.display.update()
 main()
 pygame.quit()
